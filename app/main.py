@@ -3,21 +3,43 @@ FastAPI application for clinical assertion classification
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import logging
 import time
 
-from app.schemas import PredictionRequest, PredictionResponse, BatchPredictionRequest, BatchPredictionResponse, HealthResponse
+from app.schemas import (
+    PredictionRequest,
+    PredictionResponse,
+    BatchPredictionRequest,
+    BatchPredictionResponse,
+    HealthResponse,
+)
 from app.model import get_model
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Load model on startup"""
+    logger.info("Loading model during startup...")
+    try:
+        get_model()  # Load model into cache
+        logger.info("Model loaded successfully")
+    except Exception as e:
+        logger.error(f"Failed to load model during startup: {e}")
+        raise
+    yield
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Clinical Assertion Classification API",
     description="API for classifying assertion status (PRESENT, ABSENT, CONDITIONAL) in clinical text",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -28,18 +50,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Load model on startup"""
-    logger.info("Loading model during startup...")
-    try:
-        get_model()  # Load model into cache
-        logger.info("Model loaded successfully")
-    except Exception as e:
-        logger.error(f"Failed to load model during startup: {e}")
-        raise
 
 
 @app.get("/", tags=["Root"])

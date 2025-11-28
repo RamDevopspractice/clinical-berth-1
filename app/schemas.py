@@ -14,7 +14,7 @@ class PredictionRequest(BaseModel):
 class BatchPredictionRequest(BaseModel):
     """Batch prediction request for multiple sentences"""
 
-    sentences: List[str] = Field(..., min_items=1, description="List of clinical sentences to classify")
+    sentences: List[str] = Field(..., min_length=1, description="List of clinical sentences to classify")
 
 
 class PredictionResponse(BaseModel):
@@ -32,6 +32,8 @@ class BatchPredictionResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response"""
+
+    model_config = {"protected_namespaces": ()}
 
     status: str
     model_loaded: bool
