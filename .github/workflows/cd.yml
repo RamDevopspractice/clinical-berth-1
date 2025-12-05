@@ -7,7 +7,7 @@ on:
       - 'v*.*.*'
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: gcp-practice-426408
   SERVICE_NAME: clinical-bert-api
   REGION: us-central1
   REGISTRY: us-central1-docker.pkg.dev
