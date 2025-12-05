@@ -62,13 +62,6 @@ jobs:
           --min-instances=0 \
           --port=8080
 
-    - name: Ensure public access
-      run: |
-        gcloud run services add-iam-policy-binding ${{ env.SERVICE_NAME }} \
-          --region=${{ env.REGION }} \
-          --member="allUsers" \
-          --role="roles/run.invoker"
-
     - name: Get Service URL
       id: get-url
       run: |
