@@ -1,36 +1,36 @@
 name: Continuous Integration
 
-on:
+on: 
   push:
-    branches: [ main, develop ]
+    branches:  [ main, develop ]
   pull_request:
     branches: [ main, develop ]
 
-jobs:
+jobs: 
   test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
+    runs-on:  ubuntu-latest
+    strategy: 
+      matrix: 
         python-version: ['3.12']
 
     steps:
-    - name: Checkout code
+    - name:  Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+    - name: Set up Python ${{ matrix. python-version }}
+      uses:  actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
 
-    - name: Free Up Disk Space
-      run: |
+    - name:  Free Up Disk Space
+      run:  |
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /opt/hostedtoolcache/CodeQL
 
-    - name: Install dependencies
+    - name:  Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
@@ -42,8 +42,8 @@ jobs:
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 app tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-    - name: Format check with black
-      run: |
+    - name:  Format check with black
+      run:  |
         black --check app tests
 
     - name: Run tests with pytest
@@ -56,23 +56,129 @@ jobs:
 
   security:
     runs-on: ubuntu-latest
+    needs: test
     permissions:
-      contents: read
+      contents:  read
       security-events: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses:  actions/checkout@v4
 
-    - name: Run Trivy vulnerability scanner
+    - name: Build Docker image for scanning
+      run: |
+        docker build -t clinical-bert-api:scan .
+
+    - name: Run Trivy vulnerability scanner on Docker image
       uses: aquasecurity/trivy-action@master
       with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+        scan-type: 'image'
+        image-ref: 'clinical-bert-api:scan'
+        format: 'table'
+        output: 'trivy-results. txt'
 
-    - name: Upload Trivy results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+    - name: Display Trivy Scan Result Summary
       if: always()
+      run: |
+        echo "=========================================="
+        echo "🔒 TRIVY DOCKER IMAGE SECURITY SCAN SUMMARY"
+        echo "=========================================="
+        echo "📦 Image:  clinical-bert-api:scan"
+        echo ""
+        
+        if [ -f trivy-results.txt ]; then
+          # Count vulnerabilities by severity
+          CRITICAL=$(grep -i "CRITICAL" trivy-results.txt | wc -l || echo "0")
+          HIGH=$(grep -i "HIGH" trivy-results. txt | wc -l || echo "0")
+          MEDIUM=$(grep -i "MEDIUM" trivy-results.txt | wc -l || echo "0")
+          LOW=$(grep -i "LOW" trivy-results.txt | wc -l || echo "0")
+          
+          echo "📊 Vulnerability Count by Severity:"
+          echo "   🔴 CRITICAL: $CRITICAL"
+          echo "   🟠 HIGH:      $HIGH"
+          echo "   🟡 MEDIUM:   $MEDIUM"
+          echo "   🟢 LOW:      $LOW"
+          echo ""
+          echo "=========================================="
+          echo "📄 Full Scan Results:"
+          echo "=========================================="
+          cat trivy-results.txt
+        else
+          echo "⚠️  No scan results file found"
+        fi
+        
+        echo ""
+        echo "=========================================="
+        echo "✅ Scan Complete - Check artifact for details"
+        echo "=========================================="
+
+    - name:  Upload Trivy results as artifact
+      uses: actions/upload-artifact@v4
+      if:  always()
       with:
-        sarif_file: 'trivy-results.sarif'
+        name: trivy-docker-scan-results
+        path: 'trivy-results.txt'
+
+  report:
+    runs-on: ubuntu-latest
+    needs: security
+    if: always()
+    steps:
+    - name: Download Trivy scan results
+      uses: actions/download-artifact@v4
+      with:
+        name: trivy-docker-scan-results
+        path: ./scan-results
+
+    - name: Display Downloaded Scan Summary
+      run: |
+        echo "=========================================="
+        echo "📥 DOWNLOADED TRIVY SCAN REPORT SUMMARY"
+        echo "=========================================="
+        echo ""
+        
+        if [ -f ./scan-results/trivy-results.txt ]; then
+          # Extract and display summary
+          CRITICAL=$(grep -i "CRITICAL" ./scan-results/trivy-results.txt | wc -l || echo "0")
+          HIGH=$(grep -i "HIGH" ./scan-results/trivy-results.txt | wc -l || echo "0")
+          MEDIUM=$(grep -i "MEDIUM" ./scan-results/trivy-results.txt | wc -l || echo "0")
+          LOW=$(grep -i "LOW" ./scan-results/trivy-results.txt | wc -l || echo "0")
+          TOTAL=$((CRITICAL + HIGH + MEDIUM + LOW))
+          
+          echo "📦 Docker Image:  clinical-bert-api:scan"
+          echo "📅 Scan Date: $(date)"
+          echo ""
+          echo "📊 VULNERABILITY SUMMARY:"
+          echo "   🔴 CRITICAL: $CRITICAL"
+          echo "   🟠 HIGH:      $HIGH"
+          echo "   🟡 MEDIUM:   $MEDIUM"
+          echo "   🟢 LOW:      $LOW"
+          echo "   ━━━━━━━━━━━━━━━━━━━━"
+          echo "   📈 TOTAL:     $TOTAL"
+          echo ""
+          
+          # Risk assessment
+          if [ $CRITICAL -gt 0 ]; then
+            echo "⚠️  RISK LEVEL:  CRITICAL - Immediate action required!"
+          elif [ $HIGH -gt 0 ]; then
+            echo "⚠️  RISK LEVEL: HIGH - Action recommended"
+          elif [ $MEDIUM -gt 0 ]; then
+            echo "⚠️  RISK LEVEL:  MEDIUM - Review recommended"
+          elif [ $LOW -gt 0 ]; then
+            echo "✅ RISK LEVEL: LOW - Minor issues found"
+          else
+            echo "✅ RISK LEVEL:  CLEAN - No vulnerabilities detected!"
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "📄 DETAILED SCAN RESULTS:"
+          echo "=========================================="
+          cat ./scan-results/trivy-results.txt
+          echo ""
+          echo "=========================================="
+          echo "✅ Report Generation Complete"
+          echo "=========================================="
+        else
+          echo "❌ Error:  Scan results file not found!"
+          echo "Expected location: ./scan-results/trivy-results.txt"
+        fi
