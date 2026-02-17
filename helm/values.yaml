@@ -2,7 +2,7 @@ app:
   name: clinical-berth-1
 replicaCount: 1
 image:
-  repository: <your-image-repo>
+  repository: 883229994922.dkr.ecr.us-west-2.amazonaws.com/clinical-bert-api:6e6cf0bda9400377dd22448173792f6c6b4139b2
   tag: latest
 service:
   port: 8080
