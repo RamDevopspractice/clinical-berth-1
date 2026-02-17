@@ -3,14 +3,14 @@ kind: Application
 metadata:
   name: clinical-berth-1
 spec:
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: ml-ops
   project: ml-ops
   source:
     repoURL: https://github.com/RamDevopspractice/clinical-berth-1.git
     targetRevision: main
     path: helm
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ml-ops
   syncPolicy:
     automated:
       prune: true
