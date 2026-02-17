@@ -1,0 +1,7 @@
+apiVersion: v2
+name: clinical-berth-1
+version: 0.1.0
+description: Helm chart for deploying clinical-berth-1 app to EKS
+maintainers:
+  - name: Your Name
+    email: your@email.com

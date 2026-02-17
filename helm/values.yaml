@@ -1,0 +1,15 @@
+app:
+  name: clinical-berth-1
+replicaCount: 1
+image:
+  repository: <your-image-repo>
+  tag: latest
+service:
+  port: 8080
+  type: ClusterIP
+env:
+  production: production
+ingress:
+  class: alb
+  path: /
+  pathType: Prefix
