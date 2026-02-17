@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: clinical-berth-1
 spec:
-  project: default
+  project: ml-ops
   source:
     repoURL: https://github.com/RamDevopspractice/clinical-berth-1.git
     targetRevision: main
