@@ -5,7 +5,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: <your-git-repo-url>
+    repoURL: https://github.com/RamDevopspractice/clinical-berth-1.git
     targetRevision: HEAD
     path: helm
   destination:
