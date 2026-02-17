@@ -4,7 +4,7 @@ metadata:
   name: clinical-berth-1
 spec:
   destinations:
-    - server: https://kubernetes.default.svc
+    - server: https://DAE8C9167F475CC9D94D618BCCDD992A.gr7.us-west-2.eks.amazonaws.com
       namespace: ml-ops
   project: ml-ops
   source:
