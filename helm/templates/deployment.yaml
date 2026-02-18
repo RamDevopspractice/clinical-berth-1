@@ -25,3 +25,8 @@ spec:
           env:
             - name: ENV
               value: {{ .Values.env.production }}
+          resources:
+            requests:
+              memory: "512Mi"
+            limits:
+              memory: "1Gi"
