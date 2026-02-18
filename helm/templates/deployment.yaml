@@ -27,6 +27,6 @@ spec:
               value: {{ .Values.env.production }}
           resources:
             requests:
-              memory: "512Mi"
+              memory: {{ .Values.resources.requests.memory | quote }}
             limits:
-              memory: "1Gi"
+              memory: {{ .Values.resources.limits.memory | quote }}
