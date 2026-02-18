@@ -3,7 +3,7 @@ app:
 replicaCount: 1
 image:
   repository: 883229994922.dkr.ecr.us-west-2.amazonaws.com/clinical-bert-api
-  tag: 29db54970780219da19a2342c0d83b5421d29678
+  tag: 741a10698d2ac57aba89c82a165f2653d9618b6a
 service:
   port: 8080
   type: ClusterIP
